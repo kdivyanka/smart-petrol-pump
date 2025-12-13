@@ -20,6 +20,8 @@ app.get("/api/health", (req, res) => {
 // Trip routes
 app.use("/api/trip", tripRoutes);
 
+
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

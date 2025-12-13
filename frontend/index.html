@@ -9,9 +9,17 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
+    <!-- Leaflet Map -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="style/style.css" />
 </head>
+
 
 <body class="bg-gray-100">
 
@@ -66,7 +74,13 @@
         </form>
 
         <div id="result" class="mt-6 p-4 bg-gray-50 rounded hidden"></div>
+        <!-- MAP CONTAINER -->
+        <div id="map"
+         class="mt-6 rounded shadow"
+         style="height: 450px; display: none;"
+        ></div>
     </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script src="script.js"></script>
 </body>

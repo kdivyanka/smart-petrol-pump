@@ -1,86 +1,57 @@
-// backend/services/tripService.js
 const { geocodeAddress } = require("./geocodingService");
 const { getRoute } = require("./routingService");
-const { findFuelStations, buildBoundingBoxFromRoute } = require("./stationService");
-const { calculateFuel } = require("./fuelService");
-const { analyzeGaps } = require("./gapService");
 
-/**
- * Main function: planTrip
- * Body expected from frontend:
- * {
- *   startAddress: string,
- *   endAddress: string,
- *   mileage: number,
- *   tankCapacity: number,
- *   currentFuel: number,
- *   bufferPercentage: number,
- *   gapThresholdKm: number
- * }
- */
-async function planTrip(body) {
-  const {
-    startAddress,
-    endAddress,
-    mileage,
-    tankCapacity,
-    currentFuel,
-    bufferPercentage,
-    gapThresholdKm,
-  } = body;
+async function planTrip(data) {
+  const {
+    startAddress,
+    endAddress,
+    mileage,
+    tankCapacity,
+    currentFuel,
+    bufferPercentage,
+    gapThresholdKm,
+  } = data;
 
-  if (
-    !startAddress ||
-    !endAddress ||
-    !mileage ||
-    !tankCapacity ||
-    bufferPercentage === undefined
-  ) {
-    throw new Error("Missing required fields in request body.");
-  }
+  // 1. Geocode start & end
+  const start = await geocodeAddress(startAddress);
+  const end = await geocodeAddress(endAddress);
 
-  // 1. Geocode start and end addresses
-  const startLocation = await geocodeAddress(startAddress);
-  const endLocation = await geocodeAddress(endAddress);
+  // 2. Get route
+  const routeData = await getRoute(
+    start.lon,
+    start.lat,
+    end.lon,
+    end.lat
+  );
 
-  // 2. Get route from OSRM
-  const routeData = await getRoute(startLocation, endLocation);
-  const { distanceKm, coordinates } = routeData;
+  const distanceMeters = routeData.routes[0].summary.distance;
+  const distanceKm = distanceMeters / 1000;
 
-  // 3. Fuel calculation
-  const fuelResult = calculateFuel({
-    distanceKm,
-    mileage,
-    tankCapacity,
-    currentFuel: currentFuel || 0,
-    bufferPercentage,
-  });
+  // 3. Fuel calculations
+  const fuelNeeded = distanceKm / mileage;
+  const bufferFuel = (bufferPercentage / 100) * fuelNeeded;
+  const totalFuelRequired = fuelNeeded + bufferFuel;
 
-  // 4. Find fuel stations along route
-  const bbox = buildBoundingBoxFromRoute(coordinates);
-  const stations = await findFuelStations(bbox);
+  const fuelShortage =
+    totalFuelRequired > currentFuel
+      ? totalFuelRequired - currentFuel
+      : 0;
 
-  // 5. Gap analysis
-  const gaps = analyzeGaps(
-    coordinates,
-    stations,
-    gapThresholdKm || 15 // default 15 km
-  );
-
-  // 6. Return everything to frontend
-  return {
-    startLocation,
-    endLocation,
-    route: {
-      distanceKm,
-      coordinates,
-    },
-    fuel: fuelResult,
-    stations,
-    gaps,
-  };
+  return {
+    startLocation: start.name,
+    endLocation: end.name,
+    distanceKm: Number(distanceKm.toFixed(2)),
+    mileage,
+    fuelNeeded: Number(fuelNeeded.toFixed(2)),
+    bufferFuel: Number(bufferFuel.toFixed(2)),
+    totalFuelRequired: Number(totalFuelRequired.toFixed(2)),
+    currentFuel,
+    fuelShortage: Number(fuelShortage.toFixed(2)),
+    message:
+      fuelShortage > 0
+        ? "Refueling required for this trip"
+        : "Sufficient fuel available",
+  };
 }
 
-module.exports = {
-  planTrip,
-};
+module.exports = { planTrip };

@@ -1,39 +1,30 @@
-// backend/services/geocodingService.js
 const axios = require("axios");
 
-const NOMINATIM_BASE_URL = "https://nominatim.openstreetmap.org/search";
+const GEOAPIFY_KEY = process.env.GEOAPIFY_KEY;
 
-/**
- * Geocode a text address to latitude & longitude using Nominatim
- */
 async function geocodeAddress(address) {
-  const response = await axios.get(NOMINATIM_BASE_URL, {
-    params: {
-      q: address,
-      format: "json",
-      limit: 1,
-    },
-    headers: {
-      // Nominatim asks for a User-Agent or email
-      "User-Agent": "smart-petrol-project/1.0 (your-email@example.com)",
-    },
-  });
+  const response = await axios.get(
+    "https://api.geoapify.com/v1/geocode/search",
+    {
+      params: {
+        text: address,
+        limit: 1,
+        apiKey: GEOAPIFY_KEY,
+      },
+    }
+  );
 
-  const data = response.data;
+  const features = response.data.features;
 
-  if (!data || data.length === 0) {
-    throw new Error(`Could not find location for: ${address}`);
+  if (!features || features.length === 0) {
+    throw new Error(`Location not found: ${address}`);
   }
 
-  const place = data[0];
-
   return {
-    lat: parseFloat(place.lat),
-    lon: parseFloat(place.lon),
-    displayName: place.display_name,
+    lat: features[0].geometry.coordinates[1],
+    lon: features[0].geometry.coordinates[0],
+    name: features[0].properties.formatted,
   };
 }
 
-module.exports = {
-  geocodeAddress,
-};
+module.exports = { geocodeAddress };

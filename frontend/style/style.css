@@ -149,3 +149,9 @@ a.cta {
 @media (min-width: 1200px) {
   .max-w-3xl.mx-auto { max-width: 1000px; }
 }
+
+/* FIX Leaflet markers with Tailwind */
+.leaflet-container img {
+  max-width: none !important;
+}
+
