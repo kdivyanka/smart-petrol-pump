@@ -1,6 +1,9 @@
+<<<<<<< HEAD
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+=======
+>>>>>>> 34ede30c87a21ef304f5ac73bf351c8968a443ba
 
 const tripRoutes = require("./routes/tripRoutes");
 
