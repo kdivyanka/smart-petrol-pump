@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login – Smart Petrol Pump</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #e0e7ff, #f5f3ff);
+      font-family: system-ui, sans-serif;
+    }
+  </style>
+</head>
+
+<body class="flex items-center justify-center min-h-screen">
+
+  <div class="bg-white p-8 rounded-xl shadow-xl w-full max-w-md">
+    <h1 class="text-3xl font-bold text-center text-indigo-600 mb-2">
+      Smart Petrol Pump
+    </h1>
+    <p class="text-center text-gray-500 mb-6">
+      Enter your details to continue
+    </p>
+
+    <form id="loginForm" class="space-y-4">
+
+      <input
+        type="text"
+        id="name"
+        placeholder="Name"
+        required
+        class="w-full p-3 border rounded-lg"
+      />
+
+      <input
+        type="email"
+        id="email"
+        placeholder="Email"
+        required
+        class="w-full p-3 border rounded-lg"
+      />
+
+      <input
+        type="number"
+        id="mileage"
+        placeholder="Mileage (km/l)"
+        required
+        class="w-full p-3 border rounded-lg"
+      />
+
+      <input
+        type="number"
+        id="tankCapacity"
+        placeholder="Tank Capacity (litres)"
+        required
+        class="w-full p-3 border rounded-lg"
+      />
+
+      <button
+        type="submit"
+        class="w-full py-3 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700"
+      >
+        Continue
+      </button>
+
+      <p id="msg" class="text-center text-red-500 text-sm"></p>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const msg = document.getElementById("msg");
+      msg.textContent = "";
+
+      const data = {
+        name: document.getElementById("name").value,
+        email: document.getElementById("email").value,
+        mileage: Number(document.getElementById("mileage").value),
+        tankCapacity: Number(document.getElementById("tankCapacity").value)
+      };
+
+      try {
+        const res = await fetch("http://localhost:5000/api/user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+
+        if (!res.ok) {
+          msg.textContent = result.error || "Server error";
+          return;
+        }
+
+        // ✅ STORE USER
+        localStorage.setItem("userId", result._id);
+        localStorage.setItem("user", JSON.stringify(result));
+
+        // ✅ GO TO MAIN PAGE
+        window.location.href = "index.html";
+
+      } catch (err) {
+        msg.textContent = "Backend not reachable";
+      }
+    });
+  </script>
+
+</body>
+</html>
